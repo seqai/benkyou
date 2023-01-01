@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32526.322
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenkyouBot", "BenkyouBot\BenkyouBot.csproj", "{4AAE544A-FA91-429D-8E0A-2F4C859D2310}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benkyou", "Benkyou\Benkyou.csproj", "{141B2E6F-3863-4C34-9F85-5DF9BB654D76}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4AAE544A-FA91-429D-8E0A-2F4C859D2310}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AAE544A-FA91-429D-8E0A-2F4C859D2310}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AAE544A-FA91-429D-8E0A-2F4C859D2310}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AAE544A-FA91-429D-8E0A-2F4C859D2310}.Release|Any CPU.Build.0 = Release|Any CPU
+		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {62B55E7D-04BD-4AE8-9E3A-51B33FD18132}
+	EndGlobalSection
+EndGlobal
