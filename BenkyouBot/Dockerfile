@@ -11,6 +11,7 @@ COPY ["BenkyouBot/BenkyouBot.csproj", "BenkyouBot/"]
 RUN dotnet restore "BenkyouBot/BenkyouBot.csproj"
 COPY . .
 WORKDIR "/src/BenkyouBot"
+RUN rm -rf appsettings.Local.json
 RUN dotnet build "BenkyouBot.csproj" -c Release -o /app/build
 
 FROM build AS publish

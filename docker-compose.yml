@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  benkyo-telegram-bot:
+    build:
+      dockerfile: BenkyouBot/Dockerfile
+    container_name: benkyo-telegram-bot
+    restart: always
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: https://+:443
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: benkyou_db
+      POSTGRES_USER: ${POSTGRES_USER:-CHANGE_ME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME}
+      PGDATA: /data/postgres
+    volumes:
+       - postgres:/data/postgres
+    restart: always
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-CHANGE_ME}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+       - pgadmin:/var/lib/pgadmin
+    restart: unless-stopped
+
+volumes:
+    postgres:
+    pgadmin:

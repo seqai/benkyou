@@ -3,9 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.2.32526.322
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenkyouBot", "BenkyouBot\BenkyouBot.csproj", "{4AAE544A-FA91-429D-8E0A-2F4C859D2310}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BenkyouBot", "BenkyouBot\BenkyouBot.csproj", "{4AAE544A-FA91-429D-8E0A-2F4C859D2310}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benkyou", "Benkyou\Benkyou.csproj", "{141B2E6F-3863-4C34-9F85-5DF9BB654D76}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benkyou", "Benkyou\Benkyou.csproj", "{141B2E6F-3863-4C34-9F85-5DF9BB654D76}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E8D77AE7-D00D-4753-9CF4-1227B8CF5097}"
+	ProjectSection(SolutionItems) = preProject
+		docker-compose.yml = docker-compose.yml
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

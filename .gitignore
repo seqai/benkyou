@@ -399,3 +399,5 @@ FodyWeavers.xsd
 
 appsettings.Local.json
 certs/
+**/docker-compose.override.yml
+*.swp

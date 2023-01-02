@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Benkyou;
 using Benkyou.DAL;
 using Benkyou.DAL.Services;
@@ -10,7 +11,6 @@ using Telegram.BotAPI.GettingUpdates;
 using File = System.IO.File;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
@@ -26,7 +26,7 @@ builder.Services.AddHostedService(sp =>
     var logger = sp.GetRequiredService<ILogger<AppInitializer>>();
 
     var certificatePath = builder.Configuration.GetValue<string>("Kestrel:Certificates:Default:Path");
-    var rawCertificate = File.ReadAllBytes(certificatePath);
+    var rawCertificate = certificatePath != null ? File.ReadAllBytes(certificatePath) : Array.Empty<byte>();
 
     return new AppInitializer(botClient, options, rawCertificate, webHostEnvironment, hostApplicationLifetime, logger);
 });
@@ -91,7 +91,10 @@ internal class AppInitializer : IHostedService
         _telegramOptions = telegramOptions.Value;
         _logger = logger;
 
-        _certInputFile = new InputFile(certificate, "public_key.pem");
+        if (_telegramOptions.SendCertificate)
+        {
+            _certInputFile = new InputFile(certificate, "public_key.pem");
+        }
     }
     
     public async Task StartAsync(CancellationToken cancellationToken)
