@@ -1,7 +1,6 @@
 ﻿using Benkyou.DAL;
 using Benkyou.DAL.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Benkyou;

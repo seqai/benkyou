@@ -35,10 +35,14 @@ builder.Services.AddTransient(sp =>
     var options = sp.GetRequiredService<IOptions<TelegramOptions>>().Value;
     return new BotClient(options.BotToken);
 });
+builder.Services.AddHttpClient<ImportService>(client =>
+{
+    client.BaseAddress = new Uri("https://api.telegram.org");
+});
 builder.Services.AddScoped<ImportService>();
+builder.Services.AddScoped<ExportService>();
 builder.Services.AddTransient<RecordExtractionService>();
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

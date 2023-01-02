@@ -29,24 +29,45 @@ public class RecordService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<IEnumerable<Record>> GetRecordsAsync(long userId)
+    public async Task<IReadOnlyList<Record>> GetRecords(long userId, RecordType recordType, DateOnly from, DateOnly to, bool showIgnored)
     {
-        var user = await _dbContext.Users.FindAsync(userId);
-        if (user is null)
+        var query = _dbContext.Records
+            .Where(r => r.UserId == userId &&
+                         r.UpdatedAt >= from.ToDateTime(TimeOnly.MinValue).ToUniversalTime() &&
+                         r.UpdatedAt <= to.ToDateTime(TimeOnly.MinValue).ToUniversalTime());
+
+        if (recordType != RecordType.Any)
         {
-            throw new ArgumentException($"User with id {userId} not found");
+            query = query.Where(r => r.RecordType == recordType);
         }
 
-        return user.Records;
+        if (!showIgnored)
+        {
+            query = query.Where(r => !r.Ignored);
+        }
+
+        return await query
+            .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Record>> GetTopRecordsByDate(long userId, int count, RecordType recordType, DateOnly from, DateOnly to)
+    public async Task<IReadOnlyList<Record>> GetTopRecordsByDate(long userId, int count, RecordType recordType, DateOnly from, DateOnly to, bool showIgnored)
     {
-        return await _dbContext.Records
+        var query = _dbContext.Records
             .Where(r => r.UserId == userId &&
-                        (recordType == RecordType.Any || r.RecordType == recordType) &&
                          r.UpdatedAt >= from.ToDateTime(TimeOnly.MinValue).ToUniversalTime() &&
-                         r.UpdatedAt <= to.ToDateTime(TimeOnly.MinValue).ToUniversalTime())
+                         r.UpdatedAt <= to.ToDateTime(TimeOnly.MinValue).ToUniversalTime());
+
+        if (recordType != RecordType.Any)
+        {
+            query = query.Where(r => r.RecordType == recordType);
+        }
+
+        if (!showIgnored)
+        {
+            query = query.Where(r => !r.Ignored);
+        }
+
+        return await query
             .OrderByDescending(r => r.Score)
             .ThenByDescending(r => r.UpdatedAt)
             .Take(count)
@@ -59,7 +80,7 @@ public class RecordService
             .FirstOrDefaultAsync(r => r.UserId == userId && r.Content == content && r.RecordType == type);
     }
 
-    public async Task UpdateRecord(Record existingRecord, DateTime updatedDate, int updatedScore)
+    public async Task UpdateRecord(Record existingRecord, DateTime updatedDate, int updatedScore, bool ignored)
     {
         var record = _dbContext.Records.Find(existingRecord.RecordId);
         if (record is null)
@@ -68,6 +89,7 @@ public class RecordService
         }
         record.UpdatedAt = updatedDate;
         record.Score = updatedScore;
+        record.Ignored = ignored;
         await _dbContext.SaveChangesAsync();
     }
 

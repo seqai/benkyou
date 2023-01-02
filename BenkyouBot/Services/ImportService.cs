@@ -1,4 +1,4 @@
-using BenkyouBot.Controllers;
+using BenkyouBot.Model;
 using Telegram.BotAPI;
 using Telegram.BotAPI.AvailableMethods;
 using Telegram.BotAPI.AvailableTypes;
@@ -8,51 +8,52 @@ namespace BenkyouBot.Services;
 
 public class ImportService 
 {
-    private readonly ILogger<TelegramController> _logger;
+    private readonly ILogger<ImportService> _logger;
     private readonly BotClient _botClient;
     private readonly RecordExtractionService _recordExtractionService;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public ImportService(ILogger<TelegramController> logger, BotClient botClient, RecordExtractionService recordExtractionService)
+    public ImportService(ILogger<ImportService> logger, BotClient botClient, RecordExtractionService recordExtractionService, IHttpClientFactory httpClientFactory)
     {
         _logger = logger;
         _botClient = botClient;
         _recordExtractionService = recordExtractionService;
+        _httpClientFactory = httpClientFactory;
     }
-    public async Task HandleImport(User user, string args, Document updateMessageDocument, CancellationToken cancellationToken)
+    public async Task HandleImport(User user, ImportParameters parameters, Document updateMessageDocument, CancellationToken cancellationToken)
     {
         try
         {
-            var argsTokens = args.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-            var type = argsTokens[0].ToLower();
-            var addScore = false;
-            var assumedDate = new DateOnly(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
-            foreach (var token in argsTokens.Skip(1))
+            if (parameters.Type == ImportType.Unknown)
             {
-                if (token == "-score")
-                {
-                    addScore = true;
-                }
-                else if (token.StartsWith("-date"))
-                {
-                    var date = token.Split('=', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[1];
-                    assumedDate = DateOnly.ParseExact(date, "yyyy-MM-dd");
-                }
-            }
+                await _botClient.SendMessageAsync(user.TelegramId, "Unknown import type", cancellationToken: cancellationToken);
+                return;
 
+            }
+            
             var fileInfo = await _botClient.GetFileAsync(updateMessageDocument.FileId, cancellationToken);
             var fileUrl = $"https://api.telegram.org/file/bot{_botClient.Token}/{fileInfo.FilePath}";
-            var fileContent = await new HttpClient().GetByteArrayAsync(fileUrl, cancellationToken);
-            switch (type)
+            var httpClient = _httpClientFactory.CreateClient();
+            var fileContent = await httpClient.GetByteArrayAsync(fileUrl, cancellationToken);
+
+            switch (parameters.Type)
             {
-                case "tg":
-                    await _recordExtractionService.ImportTgHistory(user, fileContent, cancellationToken, addScore);
+                case ImportType.TelegramHistory:
+                    await _recordExtractionService.ImportTgHistory(user, fileContent, cancellationToken, parameters.AddScore);
                     break;
-                case "jisho":
-                    await _recordExtractionService.ImportJishoHistory(user, fileContent, cancellationToken, addScore, assumedDate);
+                case ImportType.Csv:
+                    await _recordExtractionService.ImportCsvHistory(
+                        user, 
+                        fileContent, 
+                        parameters.AddScore,
+                        parameters.ContentColumnIndex,
+                        parameters.RecordTypeColumnIndex,
+                        parameters.DateColumnIndex,
+                        parameters.AssumedDate,
+                        cancellationToken);
                     break;
                 default:
-                    await _botClient.SendMessageAsync(user.TelegramId, "Unknown import type", cancellationToken: cancellationToken);
+                    await _botClient.SendMessageAsync(user.TelegramId, "Unsupported import type", cancellationToken: cancellationToken);
                     return;
             }
 
@@ -64,5 +65,4 @@ public class ImportService
             _logger.LogError(e, "Error while handling import");
         }
     }
-
 }

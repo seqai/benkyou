@@ -1,7 +1,6 @@
 ﻿using Benkyou.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using Microsoft.Extensions.Options;
 
 namespace Benkyou.DAL;
 
@@ -26,7 +25,7 @@ public class BenkyouDbContext : DbContext
         modelBuilder.Entity<User>().HasKey(u => u.UserId);
         modelBuilder.Entity<User>().HasIndex(u => u.TelegramId).IsUnique();
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
-        modelBuilder.Entity<Record>().HasIndex(r => new { r.UserId, r.Content }).IsUnique();
+        modelBuilder.Entity<Record>().HasIndex(r => new { r.UserId, r.Content, r.RecordType }).IsUnique();
     }
 }
 
