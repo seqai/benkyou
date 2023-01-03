@@ -13,6 +13,7 @@ public class Record
     public User User { get; set; }
     public int Score { get; set; }
     public bool Ignored { get; set; }
+    public virtual ICollection<RecordHit> Hits { get; set; }
 }
 
 public enum RecordType

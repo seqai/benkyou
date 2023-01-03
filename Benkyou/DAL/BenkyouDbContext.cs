@@ -9,6 +9,8 @@ public class BenkyouDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Record> Records { get; set; }
 
+    public DbSet<RecordHit> RecordHits { get; set; }
+
     public BenkyouDbContext(DbContextOptions<BenkyouDbContext> options) : base(options)
     {
     }
@@ -20,12 +22,19 @@ public class BenkyouDbContext : DbContext
             .WithOne(r => r.User)
             .IsRequired()
             .HasForeignKey(r => r.UserId);
-        
+
+        modelBuilder.Entity<Record>()
+            .HasMany(r => r.Hits)
+            .WithOne(h => h.Record)
+            .IsRequired()
+            .HasForeignKey(h => h.RecordId);
+
         modelBuilder.Entity<Record>().HasKey(r => r.RecordId);
         modelBuilder.Entity<User>().HasKey(u => u.UserId);
         modelBuilder.Entity<User>().HasIndex(u => u.TelegramId).IsUnique();
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
         modelBuilder.Entity<Record>().HasIndex(r => new { r.UserId, r.Content, r.RecordType }).IsUnique();
+        modelBuilder.Entity<RecordHit>().HasKey(h => h.RecordHitId);
     }
 }
 

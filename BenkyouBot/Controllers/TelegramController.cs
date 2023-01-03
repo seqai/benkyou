@@ -154,7 +154,7 @@ public class TelegramController : ControllerBase
                 if (existingRecord is not null && (includeIgnored || !existingRecord.Ignored))
                 {
                     var updatedTime = updateTime ? DateTime.UtcNow : existingRecord.UpdatedAt;
-                    await _recordService.UpdateRecord(existingRecord, updatedTime, score, existingRecord.Ignored);
+                    await _recordService.UpdateRecord(existingRecord, updatedTime, score, existingRecord.Ignored, addHit: false);
                     await _botClient.SendMessageAsync(user.TelegramId, $"Updated record: {existingRecord.Content} ({existingRecord.RecordType}): {score}", cancellationToken: cancellationToken);
                 }
                 else
@@ -199,7 +199,7 @@ public class TelegramController : ControllerBase
                 var existingRecord = await _recordService.GetRecordByContent(user.UserId, item, recordType);
                 if (existingRecord is not null)
                 {
-                    await _recordService.UpdateRecord(existingRecord, existingRecord.UpdatedAt, existingRecord.Score, ignored);
+                    await _recordService.UpdateRecord(existingRecord, existingRecord.UpdatedAt, existingRecord.Score, ignored, addHit: false);
                     await _botClient.SendMessageAsync(user.TelegramId, $"Record {item} ({recordType}) is now {(ignored ? "ignored" : "included")}", cancellationToken: cancellationToken);
                 }
                 else

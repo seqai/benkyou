@@ -221,8 +221,12 @@ public class RecordExtractionService
                 return (existingRecord, false, false);
             }
 
-            await _recordService.UpdateRecord(existingRecord,
-                date > existingRecord.UpdatedAt ? date : existingRecord.UpdatedAt, existingRecord.Score + 1, existingRecord.Ignored);
+            await _recordService.UpdateRecord(
+                existingRecord,
+                date > existingRecord.UpdatedAt ? date : existingRecord.UpdatedAt, 
+                existingRecord.Score + 1, 
+                existingRecord.Ignored,
+                addHit: true);
             return (existingRecord, false, true);
         }
         else
@@ -234,7 +238,15 @@ public class RecordExtractionService
                 UserId = user.UserId,
                 CreatedAt = date,
                 UpdatedAt = date,
-                Score = 1
+                Score = 1,
+                Hits = new List<RecordHit>
+                {
+                    new()
+                    {
+                        CreatedAt = date,
+                        HitScore = 1,
+                    }
+                }
             };
             await _recordService.AddRecord(record);
             return (record, true, false);

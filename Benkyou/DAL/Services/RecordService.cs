@@ -80,9 +80,12 @@ public class RecordService
             .FirstOrDefaultAsync(r => r.UserId == userId && r.Content == content && r.RecordType == type);
     }
 
-    public async Task UpdateRecord(Record existingRecord, DateTime updatedDate, int updatedScore, bool ignored)
+    public async Task UpdateRecord(Record existingRecord, DateTime updatedDate, int updatedScore, bool ignored, bool addHit)
     {
-        var record = _dbContext.Records.Find(existingRecord.RecordId);
+        var record = await _dbContext.Records
+            .Include(r => r.Hits)
+            .FirstOrDefaultAsync(r => r.RecordId == existingRecord.RecordId);
+
         if (record is null)
         {
             throw new ArgumentException($"Record with id {existingRecord.RecordId} not found");
@@ -90,6 +93,15 @@ public class RecordService
         record.UpdatedAt = updatedDate;
         record.Score = updatedScore;
         record.Ignored = ignored;
+        if (addHit)
+        {
+            record.Hits.Add(new RecordHit
+            {
+                CreatedAt = updatedDate,
+                Ignored = ignored,
+                HitScore = updatedScore
+            });
+        }
         await _dbContext.SaveChangesAsync();
     }
 
