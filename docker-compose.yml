@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  benkyo-telegram-bot:
+  benkyou-telegram-bot:
     build:
       dockerfile: BenkyouBot/Dockerfile
     container_name: benkyo-telegram-bot
