@@ -85,11 +85,11 @@ public class TelegramController : ControllerBase
             var sb = new StringBuilder();
             foreach (var record in createdRecords)
             {
-                sb.AppendLine($"Created record: {record} ({record.RecordType})");
+                sb.AppendLine($"Created record: {record.Content} ({record.RecordType})");
             }
             foreach (var record in updatedRecords)
             {
-                sb.AppendLine($"Updated record: {record} ({record.RecordType})");
+                sb.AppendLine($"Updated record: {record.Content} ({record.RecordType}): {record.Score}");
             }
             if (sb.Length > 0)
             {
