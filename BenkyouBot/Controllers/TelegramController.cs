@@ -115,6 +115,9 @@ public class TelegramController : ControllerBase
             case "/include":
                 await HandleIgnoreOrIncludeCommand(user, args, cancellationToken, include: true);
                 break;
+            case "/score":
+                await HandleScoreCommand(user, args, cancellationToken);
+                break;
             case "/top":
                 await HandleTopCommand(user, args, cancellationToken);
                 break;
@@ -131,6 +134,40 @@ public class TelegramController : ControllerBase
                 await _botClient.SendMessageAsync(user.TelegramId, "Send me the file to import", cancellationToken: cancellationToken);
                 State[user.TelegramId] = new UserState(true, parameters);
                 break;
+        }
+    }
+
+    private async Task HandleScoreCommand(User user, string args, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (content, recordType, score, includeIgnored, updateTime, helpMessage) = ParseScoreCommandArguments(args.Tokenize());
+            if (!string.IsNullOrWhiteSpace(helpMessage))
+            {
+                await _botClient.SendMessageAsync(user.TelegramId, helpMessage, cancellationToken: cancellationToken);
+                return;
+            }
+
+            foreach (var item in content)
+            {
+                var existingRecord = await _recordService.GetRecordByContent(user.UserId, item, recordType);
+                if (existingRecord is not null && (includeIgnored || !existingRecord.Ignored))
+                {
+                    var updatedTime = updateTime ? DateTime.UtcNow : existingRecord.UpdatedAt;
+                    await _recordService.UpdateRecord(existingRecord, updatedTime, score, existingRecord.Ignored);
+                    await _botClient.SendMessageAsync(user.TelegramId, $"Updated record: {existingRecord.Content} ({existingRecord.RecordType}): {score}", cancellationToken: cancellationToken);
+                }
+                else
+                {
+                    await _botClient.SendMessageAsync(user.TelegramId, $"Record {item} ({recordType}) does not exist or marked as ignored", cancellationToken: cancellationToken);
+                }
+            }
+
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while handling ignore command");
+            await _botClient.SendMessageAsync(user.TelegramId, "Error while handling top command", cancellationToken: cancellationToken);
         }
     }
 

@@ -104,6 +104,38 @@ public static class CommandArgumentParsers
         return (content, recordType, helpMessage);
     }
 
+    public static (IReadOnlyList<string> content, RecordType recordType, int score, bool includeIgnored, bool updateTime, string helpMessage) ParseScoreCommandArguments(string[] args)
+    {
+        var content = new List<string>();
+        var recordType = RecordType.Any;
+        var score = 0;
+        var includeIgnored = false;
+        var updateTime = false;
+        var showHelpMessage = false;
+        var helpMessage = string.Empty;
+
+        var options = new OptionSet
+        {
+            {"<>", "Content", c => content.Add(c)},
+            {"k|kind=", "Record kind", t => recordType = FromAlias(t, withDefaultName: true, withFallback: true, defaultValue: RecordType.Any)},
+            {"s|score=", "Score", s => score = int.Parse(s)},
+            {"i|ignored", "Include ignored records", i => includeIgnored = i != null},
+            {"u|update-time", "Update time", u => updateTime = u != null},
+            {"h|help", "Show help message", h => showHelpMessage = h != null},
+        };
+
+        options.Parse(args);
+
+        if (showHelpMessage)
+        {
+            using var helpMessageWriter = new StringWriter();
+            options.WriteOptionDescriptions(helpMessageWriter);
+            helpMessage = helpMessageWriter.ToString();
+        }
+
+        return (content, recordType, score, updateTime, includeIgnored, helpMessage);
+    }
+
     public static (RecordType recordType, DateOnly from, DateOnly till, bool includeIgnored, string helpMessage) ParseExportCommandArguments(string[] args)
     {
         var recordType = RecordType.Any;
