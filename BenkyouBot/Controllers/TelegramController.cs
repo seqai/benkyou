@@ -73,8 +73,8 @@ public class TelegramController : ControllerBase
         if (message is not null && message.StartsWith("/"))
         {
             await HandleCommand(user, message, cancellationToken);
-        }
-        if (state.IsImporting && updateMessage.Document is not null)
+        } 
+        else if (state.IsImporting && updateMessage.Document is not null)
         {
             await _botClient.SendMessageAsync(user.TelegramId, "Importing... (this might take some time because I am too lazy to implement proper merging now)", cancellationToken: cancellationToken);
             RunImport(user, state, updateMessage.Document, cancellationToken);
