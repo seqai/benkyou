@@ -32,7 +32,8 @@ public class RecordExtractionService
             var updatedRecords = new List<Record>();
             var records = type switch
             {
-                RecordType.Kanji or RecordType.Vocabulary => input.Tokenize().Select(t => (t, type)),
+                RecordType.Kanji => input.Tokenize().SelectMany(t => t.Select(c => (c.ToString(), type))),
+                RecordType.Vocabulary => input.Tokenize().Select(t => (t, type)),
                 RecordType.Grammar or RecordType.Sentence => new[] { (input, type) },
                 RecordType.Any => ExtractRecords(input),
                 _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
