@@ -3,6 +3,7 @@ using System;
 using Benkyou.DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Benkyou.Migrations
 {
     [DbContext(typeof(BenkyouDbContext))]
-    partial class BenkyouDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230104181039_AddUserDefaultValue")]
+    partial class AddUserDefaultValue
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -96,8 +98,7 @@ namespace Benkyou.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
 
                     b.Property<int>("DefaultRecordType")
-                        .HasColumnType("integer")
-                        .HasDefaultValueSql("4");
+                        .HasColumnType("integer");
 
                     b.Property<long>("TelegramId")
                         .HasColumnType("bigint");

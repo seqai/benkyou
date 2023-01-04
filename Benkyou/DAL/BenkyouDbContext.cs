@@ -29,11 +29,13 @@ public class BenkyouDbContext : DbContext
             .IsRequired()
             .HasForeignKey(h => h.RecordId);
 
-        modelBuilder.Entity<Record>().HasKey(r => r.RecordId);
         modelBuilder.Entity<User>().HasKey(u => u.UserId);
         modelBuilder.Entity<User>().HasIndex(u => u.TelegramId).IsUnique();
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
+
+        modelBuilder.Entity<Record>().HasKey(r => r.RecordId);
         modelBuilder.Entity<Record>().HasIndex(r => new { r.UserId, r.Content, r.RecordType }).IsUnique();
+        
         modelBuilder.Entity<RecordHit>().HasKey(h => h.RecordHitId);
     }
 }

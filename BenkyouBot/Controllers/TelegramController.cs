@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text;
 using Benkyou.DAL.Entities;
 using Benkyou.DAL.Services;
+using Benkyou.Infrastructure;
 using BenkyouBot.Infrastructure;
 using BenkyouBot.Services;
 using BenkyouBot.Model;
@@ -12,6 +13,7 @@ using Telegram.BotAPI.AvailableTypes;
 using Telegram.BotAPI.GettingUpdates;
 using User = Benkyou.DAL.Entities.User;
 using static BenkyouBot.Infrastructure.CommandArgumentParsers;
+using Npgsql.Replication.PgOutput.Messages;
 
 namespace BenkyouBot.Controllers;
 
@@ -81,21 +83,7 @@ public class TelegramController : ControllerBase
         }
         else
         {
-            var (createdRecords, updatedRecords) = await _recordExtractionService.ProcessMessage(user, updateMessage, cancellationToken);
-            var sb = new StringBuilder();
-            foreach (var record in createdRecords)
-            {
-                sb.AppendLine($"Created record: {record.Content} ({record.RecordType})");
-            }
-            foreach (var record in updatedRecords)
-            {
-                sb.AppendLine($"Updated record: {record.Content} ({record.RecordType}): {record.Score}");
-            }
-            if (sb.Length > 0)
-            {
-                await _botClient.SendMessageAsync(user.TelegramId, sb.ToString(), cancellationToken: cancellationToken);
-            }
-
+            await ExtractRecords(user, user.DefaultRecordType, updateMessage.Text ?? string.Empty, cancellationToken);
         }
     }
     
@@ -124,6 +112,9 @@ public class TelegramController : ControllerBase
             case "/export":
                 await HandleExportCommand(user, args, cancellationToken);
                 break;
+            case "/defaults":
+                await HandleDefaultsCommand(user, args, cancellationToken);
+                break;
             case "/import":
                 var (parameters, helpMessage) = ParseImportCommandArguments(args.Tokenize());
                 if (!string.IsNullOrWhiteSpace(helpMessage))
@@ -134,6 +125,34 @@ public class TelegramController : ControllerBase
                 await _botClient.SendMessageAsync(user.TelegramId, "Send me the file to import", cancellationToken: cancellationToken);
                 State[user.TelegramId] = new UserState(true, parameters);
                 break;
+        }
+
+        var types = Enum.GetValues<RecordType>().Where(t => t != RecordType.Any);
+        foreach (var type in types)
+        {
+            if (type.GetAliases().Any(a => command == $"/{a.ToLower()}"))
+            {
+                await ExtractRecords(user, type, args, cancellationToken);
+                break;
+            }
+        }
+    }
+
+    private async Task ExtractRecords(User user, RecordType type, string input, CancellationToken cancellationToken)
+    {
+        var (createdRecords, updatedRecords) = await _recordExtractionService.ProcessMessage(user, input, type, cancellationToken);
+        var sb = new StringBuilder();
+        foreach (var record in createdRecords)
+        {
+            sb.AppendLine($"Created: {record.Content} ({record.RecordType})");
+        }
+        foreach (var record in updatedRecords)
+        {
+            sb.AppendLine($"Updated: {record.Content} ({record.RecordType}): {record.Score}");
+        }
+        if (sb.Length > 0)
+        {
+            await _botClient.SendMessageAsync(user.TelegramId, sb.ToString(), cancellationToken: cancellationToken);
         }
     }
 
@@ -249,6 +268,26 @@ public class TelegramController : ControllerBase
             await _botClient.SendMessageAsync(user.TelegramId, "Error while handling top command", cancellationToken: cancellationToken);
         }
 
+    }
+
+    private async Task HandleDefaultsCommand(User user, string args, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var (recordType, helpMessage) = ParseDefaultsCommandArguments(args.Tokenize());
+            if (!string.IsNullOrWhiteSpace(helpMessage))
+            {
+                await _botClient.SendMessageAsync(user.TelegramId, helpMessage, cancellationToken: cancellationToken);
+                return;
+            }
+            await _userService.UpdateDefaults(user, recordType);
+            await _botClient.SendMessageAsync(user.TelegramId, $"Defaults updated. Record type: {recordType}", cancellationToken: cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while handling defaults command");
+            await _botClient.SendMessageAsync(user.TelegramId, "Error while handling defaults command", cancellationToken: cancellationToken);
+        }
     }
 
     private async Task RunImport(User user, UserState state, Document updateMessageDocument, CancellationToken cancellationToken)

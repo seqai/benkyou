@@ -1,6 +1,4 @@
-﻿using Benkyou.Infrastructure;
-
-namespace Benkyou.DAL.Entities;
+﻿namespace Benkyou.DAL.Entities;
 
 public class Record
 {
@@ -14,17 +12,4 @@ public class Record
     public int Score { get; set; }
     public bool Ignored { get; set; }
     public virtual ICollection<RecordHit> Hits { get; set; }
-}
-
-public enum RecordType
-{
-    [EnumStringAlias("k")]
-    Kanji,
-    [EnumStringAlias("v", "vocab", "vocab", "word", "w")]
-    Vocabulary,
-    [EnumStringAlias("g")]
-    Grammar,
-    [EnumStringAlias("s")]
-    Sentence,
-    Any
 }

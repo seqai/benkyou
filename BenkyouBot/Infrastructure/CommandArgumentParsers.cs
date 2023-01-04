@@ -166,4 +166,29 @@ public static class CommandArgumentParsers
 
         return (recordType, from, till, includeIgnored, helpMessage);
     }
+
+    public static (RecordType recordType, string helpMessage) ParseDefaultsCommandArguments(string[] args)
+    {
+        var recordType = RecordType.Any;
+        var showHelpMessage = false;
+        var helpMessage = string.Empty;
+
+        var options = new OptionSet
+        {
+            {"k|kind=", "Record kind", t => recordType = FromAlias(t, withDefaultName: true, withFallback: true, defaultValue: RecordType.Any)},
+            {"h|help", "Show help message", h => showHelpMessage = h != null},
+        };
+
+        options.Parse(args);
+
+        if (showHelpMessage)
+        {
+            using var helpMessageWriter = new StringWriter();
+            options.WriteOptionDescriptions(helpMessageWriter);
+            helpMessage = helpMessageWriter.ToString();
+        }
+
+        return (recordType, helpMessage);
+    }
+
 }

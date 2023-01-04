@@ -23,18 +23,25 @@ public class RecordExtractionService
         _logger = logger;
     }
 
-    public async Task<(IReadOnlyCollection<Record> created, IReadOnlyCollection<Record> updated)> ProcessMessage(User user, Message message, CancellationToken cancellationToken)
+    public async Task<(IReadOnlyCollection<Record> created, IReadOnlyCollection<Record> updated)> ProcessMessage(User user, string input, RecordType type, CancellationToken cancellationToken)
     {
         try
         {
             await _dbContext.Database.BeginTransactionAsync(cancellationToken);
             var createdRecords = new List<Record>();
             var updatedRecords = new List<Record>();
-            foreach (var (content, type) in ExtractRecords(message.Text ?? string.Empty))
+            var records = type switch
+            {
+                RecordType.Kanji or RecordType.Vocabulary => input.Tokenize().Select(t => (t, type)),
+                RecordType.Grammar or RecordType.Sentence => new[] { (input, type) },
+                RecordType.Any => ExtractRecords(input),
+                _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+            };
+            foreach (var (content, actualType) in records)
             {
                 try
                 {
-                    var (record, created, updated) = await CreateOrUpdateRecord(user, true, content, type, DateTime.UtcNow);
+                    var (record, created, updated) = await CreateOrUpdateRecord(user, true, content, actualType, DateTime.UtcNow);
                     if (created)
                     {
                         createdRecords.Add(record);
@@ -46,7 +53,7 @@ public class RecordExtractionService
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Failed to create or update record {Content} of type {Type}", content, type);
+                    _logger.LogError(e, "Failed to create or update record {Content} of type {Type}", content, actualType);
                     throw;
                 }
 

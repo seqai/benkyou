@@ -28,4 +28,10 @@ public class UserService
         await _dbContext.SaveChangesAsync();
         return user;
     }
+
+    public async Task UpdateDefaults(User user, RecordType recordType)
+    {
+        user.DefaultRecordType = recordType;
+        await _dbContext.SaveChangesAsync();
+    }
 }
