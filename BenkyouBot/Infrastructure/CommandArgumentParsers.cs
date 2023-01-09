@@ -167,15 +167,17 @@ public static class CommandArgumentParsers
         return (recordType, from, till, includeIgnored, helpMessage);
     }
 
-    public static (RecordType recordType, string helpMessage) ParseDefaultsCommandArguments(string[] args)
+    public static (RecordType recordType, int autotagValidityMinutes, string helpMessage) ParseDefaultsCommandArguments(User user, string[] args)
     {
-        var recordType = RecordType.Any;
+        var recordType = user.DefaultRecordType;
+        var autoTagValidityMinutes = user.AutoTagValidityMinutes;
         var showHelpMessage = false;
         var helpMessage = string.Empty;
 
         var options = new OptionSet
         {
             {"k|kind=", "Record kind", t => recordType = FromAlias(t, withDefaultName: true, withFallback: true, defaultValue: RecordType.Any)},
+            {"at|autotag=", "Autotagging duration in minutes", at => autoTagValidityMinutes = int.Parse(at)},
             {"h|help", "Show help message", h => showHelpMessage = h != null},
         };
 
@@ -188,7 +190,7 @@ public static class CommandArgumentParsers
             helpMessage = helpMessageWriter.ToString();
         }
 
-        return (recordType, helpMessage);
+        return (recordType, autoTagValidityMinutes, helpMessage);
     }
 
 }

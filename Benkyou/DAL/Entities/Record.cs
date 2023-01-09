@@ -12,4 +12,5 @@ public class Record
     public int Score { get; set; }
     public bool Ignored { get; set; }
     public virtual ICollection<RecordHit> Hits { get; set; }
+    public virtual ICollection<Tag> Tags { get; set; }
 }

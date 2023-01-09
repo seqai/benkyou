@@ -12,6 +12,7 @@ public static class DbInfrastructure
         services.AddDbContext<BenkyouDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<RecordService>();
         services.AddScoped<UserService>();
+        services.AddScoped<TagService>();
     }
     
 }

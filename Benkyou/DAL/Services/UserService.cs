@@ -14,7 +14,8 @@ public class UserService
 
     public async Task<User?> GetUserByTelegramId(long telegramId)
     {
-        return await _dbContext.Users.FirstOrDefaultAsync(u => u.TelegramId == telegramId);
+        return await _dbContext.Users
+            .FirstOrDefaultAsync(u => u.TelegramId == telegramId);
     }
 
     public async Task<User> CreateUser(long telegramId, string username)
@@ -29,9 +30,17 @@ public class UserService
         return user;
     }
 
-    public async Task UpdateDefaults(User user, RecordType recordType)
+    public async Task UpdateDefaults(User user, RecordType recordType, int autoTagValidityMinutes)
     {
         user.DefaultRecordType = recordType;
+        user.AutoTagValidityMinutes = autoTagValidityMinutes;
+        await _dbContext.SaveChangesAsync();
+    }
+
+    public async Task UpdateAutoTag(User user, string tag)
+    {
+        user.AutoTag = tag;
+        user.AutoTagValidFrom = DateTime.UtcNow;
         await _dbContext.SaveChangesAsync();
     }
 }

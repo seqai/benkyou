@@ -4,7 +4,6 @@ using Benkyou.DAL;
 using Benkyou.DAL.Entities;
 using Benkyou.DAL.Services;
 using BenkyouBot.Infrastructure;
-using Telegram.BotAPI.AvailableTypes;
 using User = Benkyou.DAL.Entities.User;
 using static Benkyou.Infrastructure.EnumHelpers;
 
@@ -13,13 +12,15 @@ namespace BenkyouBot.Services;
 public class RecordExtractionService
 {
     private readonly RecordService _recordService;
+    private readonly TagService _tagService;
     private readonly BenkyouDbContext _dbContext;
     private readonly ILogger<RecordExtractionService> _logger;
 
-    public RecordExtractionService(RecordService recordService, BenkyouDbContext dbContext, ILogger<RecordExtractionService> logger)
+    public RecordExtractionService(RecordService recordService, BenkyouDbContext dbContext, TagService tagService, ILogger<RecordExtractionService> logger)
     {
         _recordService = recordService;
         _dbContext = dbContext;
+        _tagService = tagService;
         _logger = logger;
     }
 
@@ -50,6 +51,10 @@ public class RecordExtractionService
                     else if (updated)
                     {
                         updatedRecords.Add(record);
+                    }
+                    if ((created || updated) && user.IsAutoTagValid(DateTime.UtcNow))
+                    {
+                        await _tagService.TagRecordsAsync(user.UserId, user.AutoTag, new[] { record });
                     }
                 }
                 catch (Exception e)

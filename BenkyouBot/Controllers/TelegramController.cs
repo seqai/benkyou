@@ -115,6 +115,12 @@ public class TelegramController : ControllerBase
             case "/defaults":
                 await HandleDefaultsCommand(user, args, cancellationToken);
                 break;
+            case "/autotag":
+                await HandleAutoTagCommand(user, args, cancellationToken);
+                break;
+            case "/stopautotag":
+                await HandleStopAutoTagCommand(user, args, cancellationToken);
+                break;
             case "/import":
                 var (parameters, helpMessage) = ParseImportCommandArguments(args.Tokenize());
                 if (!string.IsNullOrWhiteSpace(helpMessage))
@@ -274,19 +280,53 @@ public class TelegramController : ControllerBase
     {
         try
         {
-            var (recordType, helpMessage) = ParseDefaultsCommandArguments(args.Tokenize());
+            var (recordType, autotagValidityMinutes, helpMessage) = ParseDefaultsCommandArguments(user, args.Tokenize());
             if (!string.IsNullOrWhiteSpace(helpMessage))
             {
                 await _botClient.SendMessageAsync(user.TelegramId, helpMessage, cancellationToken: cancellationToken);
                 return;
             }
-            await _userService.UpdateDefaults(user, recordType);
-            await _botClient.SendMessageAsync(user.TelegramId, $"Defaults updated. Record type: {recordType}", cancellationToken: cancellationToken);
+            await _userService.UpdateDefaults(user, recordType, autotagValidityMinutes);
+            await _botClient.SendMessageAsync(user.TelegramId, $"Defaults updated. Record type: {recordType}. Autotagging duration: {autotagValidityMinutes}", cancellationToken: cancellationToken);
         }
         catch (Exception e)
         {
             _logger.LogError(e, "Error while handling defaults command");
             await _botClient.SendMessageAsync(user.TelegramId, "Error while handling defaults command", cancellationToken: cancellationToken);
+        }
+    }
+
+    private async Task HandleStopAutoTagCommand(User user, string args, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await _userService.UpdateAutoTag(user, string.Empty);
+            await _botClient.SendMessageAsync(user.TelegramId, "Autotagging stopped", cancellationToken: cancellationToken);
+        }
+        catch
+        {
+            _logger.LogError("Error while handling stop auto tag command");
+            await _botClient.SendMessageAsync(user.TelegramId, "Error while handling stopautotag command", cancellationToken: cancellationToken);
+        }
+    }
+
+    private async Task HandleAutoTagCommand(User user, string args, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tag = args.Trim();
+            if (string.IsNullOrWhiteSpace(tag))
+            {
+                await _botClient.SendMessageAsync(user.TelegramId, "Tag is empty", cancellationToken: cancellationToken);
+                return;
+            }
+            await _userService.UpdateAutoTag(user, tag);
+            await _botClient.SendMessageAsync(user.TelegramId, $"Tagging everything as {tag} for {user.AutoTagValidityMinutes} minutes", cancellationToken: cancellationToken);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error while handling autotag command");
+            await _botClient.SendMessageAsync(user.TelegramId, "Error while handling autotag command", cancellationToken: cancellationToken);
         }
     }
 

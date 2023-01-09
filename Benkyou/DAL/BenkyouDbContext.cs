@@ -8,6 +8,7 @@ public class BenkyouDbContext : DbContext
 {
     public DbSet<User> Users { get; set; }
     public DbSet<Record> Records { get; set; }
+    public DbSet<Tag> Tags { get; set; }
 
     public DbSet<RecordHit> RecordHits { get; set; }
 
@@ -29,6 +30,11 @@ public class BenkyouDbContext : DbContext
             .IsRequired()
             .HasForeignKey(h => h.RecordId);
 
+        modelBuilder.Entity<Record>()
+            .HasMany(r => r.Tags)
+            .WithMany(t => t.Records)
+            .UsingEntity(j => j.ToTable("RecordTags"));
+
         modelBuilder.Entity<User>().HasKey(u => u.UserId);
         modelBuilder.Entity<User>().HasIndex(u => u.TelegramId).IsUnique();
         modelBuilder.Entity<User>().HasIndex(u => u.Username).IsUnique();
@@ -37,6 +43,8 @@ public class BenkyouDbContext : DbContext
         modelBuilder.Entity<Record>().HasIndex(r => new { r.UserId, r.Content, r.RecordType }).IsUnique();
         
         modelBuilder.Entity<RecordHit>().HasKey(h => h.RecordHitId);
+
+        modelBuilder.Entity<Tag>().HasKey(t => t.TagId);
     }
 }
 
