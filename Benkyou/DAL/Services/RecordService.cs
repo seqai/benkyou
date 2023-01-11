@@ -29,7 +29,7 @@ public class RecordService
         await _dbContext.SaveChangesAsync();
     }
 
-    public async Task<IReadOnlyList<Record>> GetRecords(long userId, RecordType recordType, DateOnly from, DateOnly to, bool showIgnored)
+    public async Task<IReadOnlyList<Record>> GetRecords(Guid userId, RecordType recordType, DateOnly from, DateOnly to, bool showIgnored)
     {
         var query = _dbContext.Records
             .Where(r => r.UserId == userId &&
@@ -50,7 +50,7 @@ public class RecordService
             .ToListAsync();
     }
 
-    public async Task<IReadOnlyList<Record>> GetTopRecordsByDate(long userId, int count, RecordType recordType, DateOnly from, DateOnly to, bool showIgnored)
+    public async Task<IReadOnlyList<Record>> GetTopRecordsByDate(Guid userId, int count, RecordType recordType, DateOnly from, DateOnly to, bool showIgnored)
     {
         var query = _dbContext.Records
             .Where(r => r.UserId == userId &&
@@ -74,7 +74,7 @@ public class RecordService
             .ToListAsync();
     }
 
-    public async Task<Record?> GetRecordByContent(long userId, string content, RecordType type)
+    public async Task<Record?> GetRecordByContent(Guid userId, string content, RecordType type)
     {
         return await _dbContext.Records
             .FirstOrDefaultAsync(r => r.UserId == userId && r.Content == content && r.RecordType == type);
@@ -84,11 +84,11 @@ public class RecordService
     {
         var record = await _dbContext.Records
             .Include(r => r.Hits)
-            .FirstOrDefaultAsync(r => r.RecordId == existingRecord.RecordId);
+            .FirstOrDefaultAsync(r => r.Id == existingRecord.Id);
 
         if (record is null)
         {
-            throw new ArgumentException($"Record with id {existingRecord.RecordId} not found");
+            throw new ArgumentException($"Record with id {existingRecord.Id} not found");
         }
         record.UpdatedAt = updatedDate;
         record.Score = updatedScore;

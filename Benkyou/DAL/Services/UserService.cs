@@ -23,7 +23,7 @@ public class UserService
         var user = new User
         {
             TelegramId = telegramId,
-            Username = username
+            // Username = username
         }; 
         _dbContext.Users.Add(user);
         await _dbContext.SaveChangesAsync();

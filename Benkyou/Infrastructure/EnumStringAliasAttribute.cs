@@ -1,12 +1,11 @@
-﻿namespace Benkyou.Infrastructure
-{
-    public class EnumStringAliasAttribute : Attribute
-    {
-        public IReadOnlyCollection<string> Aliases { get; }
+﻿namespace Benkyou.Infrastructure;
 
-        public EnumStringAliasAttribute(params string[] aliases)
-        {
-            Aliases = aliases;
-        }
+public class EnumStringAliasAttribute : Attribute
+{
+    public IReadOnlyCollection<string> Aliases { get; }
+
+    public EnumStringAliasAttribute(params string[] aliases)
+    {
+        Aliases = aliases;
     }
 }

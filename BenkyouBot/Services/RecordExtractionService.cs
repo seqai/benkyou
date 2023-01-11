@@ -4,7 +4,6 @@ using Benkyou.DAL;
 using Benkyou.DAL.Entities;
 using Benkyou.DAL.Services;
 using BenkyouBot.Infrastructure;
-using User = Benkyou.DAL.Entities.User;
 using static Benkyou.Infrastructure.EnumHelpers;
 
 namespace BenkyouBot.Services;
@@ -54,7 +53,7 @@ public class RecordExtractionService
                     }
                     if ((created || updated) && user.IsAutoTagValid(DateTime.UtcNow))
                     {
-                        await _tagService.TagRecordsAsync(user.UserId, user.AutoTag, new[] { record });
+                        await _tagService.TagRecordsAsync(user.Id, user.AutoTag, new[] { record });
                     }
                 }
                 catch (Exception e)
@@ -226,7 +225,7 @@ public class RecordExtractionService
     
     private async Task<(Record record, bool created, bool updated)> CreateOrUpdateRecord(User user, bool addScore, string content, RecordType type, DateTime date)
     {
-        var existingRecord = await _recordService.GetRecordByContent(user.UserId, content, type);
+        var existingRecord = await _recordService.GetRecordByContent(user.Id, content, type);
         if (existingRecord is not null)
         {
             if (!addScore || existingRecord.Ignored)
@@ -248,7 +247,7 @@ public class RecordExtractionService
             {
                 Content = content,
                 RecordType = type,
-                UserId = user.UserId,
+                UserId = user.Id,
                 CreatedAt = date,
                 UpdatedAt = date,
                 Score = 1,

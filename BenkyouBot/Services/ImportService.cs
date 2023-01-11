@@ -1,3 +1,4 @@
+using Benkyou.DAL.Entities;
 using BenkyouBot.Model;
 using Telegram.BotAPI;
 using Telegram.BotAPI.AvailableMethods;

@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-BenkyouWebApp-A48129E2-4562-4466-928B-A446B90E9EC8</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.10" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.0" />
+    <PackageReference Include="SendGrid" Version="9.28.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Benkyou\Benkyou.csproj" />
+  </ItemGroup>
+
+</Project>

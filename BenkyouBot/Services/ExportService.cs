@@ -28,7 +28,7 @@ public class ExportService
 
     public async Task HandleExport(User user, RecordType recordType, DateOnly from, DateOnly till, bool showIgnored, CancellationToken cancellationToken)
     {
-        var records = await _recordService.GetRecords(user.UserId, recordType, from, till, showIgnored);
+        var records = await _recordService.GetRecords(user.Id, recordType, from, till, showIgnored);
         var csvStream = new MemoryStream();
         await using var writer = new StreamWriter(csvStream);
         foreach (var record in records)

@@ -2,8 +2,8 @@
 
 public class Record
 {
-    public int RecordId { get; set; }
-    public int UserId { get; set; }
+    public int Id { get; set; }
+    public Guid UserId { get; set; }
     public string Content { get; set; }
     public RecordType RecordType { get; set; }
     public DateTime CreatedAt { get; set; }

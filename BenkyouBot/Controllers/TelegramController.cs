@@ -11,9 +11,9 @@ using Telegram.BotAPI;
 using Telegram.BotAPI.AvailableMethods;
 using Telegram.BotAPI.AvailableTypes;
 using Telegram.BotAPI.GettingUpdates;
-using User = Benkyou.DAL.Entities.User;
 using static BenkyouBot.Infrastructure.CommandArgumentParsers;
 using Npgsql.Replication.PgOutput.Messages;
+using User = Benkyou.DAL.Entities.User;
 
 namespace BenkyouBot.Controllers;
 
@@ -175,7 +175,7 @@ public class TelegramController : ControllerBase
 
             foreach (var item in content)
             {
-                var existingRecord = await _recordService.GetRecordByContent(user.UserId, item, recordType);
+                var existingRecord = await _recordService.GetRecordByContent(user.Id, item, recordType);
                 if (existingRecord is not null && (includeIgnored || !existingRecord.Ignored))
                 {
                     var updatedTime = updateTime ? DateTime.UtcNow : existingRecord.UpdatedAt;
@@ -221,7 +221,7 @@ public class TelegramController : ControllerBase
             var ignored = !include;
             foreach (var item in content)
             {
-                var existingRecord = await _recordService.GetRecordByContent(user.UserId, item, recordType);
+                var existingRecord = await _recordService.GetRecordByContent(user.Id, item, recordType);
                 if (existingRecord is not null)
                 {
                     await _recordService.UpdateRecord(existingRecord, existingRecord.UpdatedAt, existingRecord.Score, ignored, addHit: false);
@@ -252,7 +252,7 @@ public class TelegramController : ControllerBase
                 return;
             }
             
-            var top = await _recordService.GetTopRecordsByDate(user.UserId, count, recordType, from, till, showIgnored);
+            var top = await _recordService.GetTopRecordsByDate(user.Id, count, recordType, from, till, showIgnored);
             var sb = new StringBuilder();
             foreach (var record in top)
             {

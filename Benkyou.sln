@@ -13,6 +13,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenkyouWebApp", "BenkyouWebApp\BenkyouWebApp.csproj", "{B9EFDBF2-F665-4892-83AF-8D8B6FF6500C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{141B2E6F-3863-4C34-9F85-5DF9BB654D76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9EFDBF2-F665-4892-83AF-8D8B6FF6500C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9EFDBF2-F665-4892-83AF-8D8B6FF6500C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9EFDBF2-F665-4892-83AF-8D8B6FF6500C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9EFDBF2-F665-4892-83AF-8D8B6FF6500C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

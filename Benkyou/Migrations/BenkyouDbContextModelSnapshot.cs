@@ -24,11 +24,11 @@ namespace Benkyou.Migrations
 
             modelBuilder.Entity("Benkyou.DAL.Entities.Record", b =>
                 {
-                    b.Property<int>("RecordId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RecordId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Content")
                         .IsRequired()
@@ -49,10 +49,10 @@ namespace Benkyou.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
-                    b.HasKey("RecordId");
+                    b.HasKey("Id");
 
                     b.HasIndex("UserId", "Content", "RecordType")
                         .IsUnique();
@@ -62,11 +62,11 @@ namespace Benkyou.Migrations
 
             modelBuilder.Entity("Benkyou.DAL.Entities.RecordHit", b =>
                 {
-                    b.Property<int>("RecordHitId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RecordHitId"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -80,7 +80,7 @@ namespace Benkyou.Migrations
                     b.Property<int>("RecordId")
                         .HasColumnType("integer");
 
-                    b.HasKey("RecordHitId");
+                    b.HasKey("Id");
 
                     b.HasIndex("RecordId");
 
@@ -112,23 +112,25 @@ namespace Benkyou.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("integer");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
 
                     b.HasKey("TagId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId", "Name")
+                        .IsUnique();
 
                     b.ToTable("Tags");
                 });
 
             modelBuilder.Entity("Benkyou.DAL.Entities.User", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("uuid");
 
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("UserId"));
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
 
                     b.Property<string>("AutoTag")
                         .HasColumnType("text");
@@ -139,37 +141,210 @@ namespace Benkyou.Migrations
                     b.Property<int>("AutoTagValidityMinutes")
                         .HasColumnType("integer");
 
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
                     b.Property<int>("DefaultRecordType")
-                        .HasColumnType("integer")
-                        .HasDefaultValueSql("4");
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
 
                     b.Property<long>("TelegramId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
 
-                    b.HasKey("UserId");
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
 
                     b.HasIndex("TelegramId")
                         .IsUnique();
 
-                    b.HasIndex("Username")
-                        .IsUnique();
+                    b.ToTable("AspNetUsers", (string)null);
+                });
 
-                    b.ToTable("Users");
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("RecordTag", b =>
                 {
-                    b.Property<int>("RecordsRecordId")
+                    b.Property<int>("RecordsId")
                         .HasColumnType("integer");
 
                     b.Property<int>("TagsTagId")
                         .HasColumnType("integer");
 
-                    b.HasKey("RecordsRecordId", "TagsTagId");
+                    b.HasKey("RecordsId", "TagsTagId");
 
                     b.HasIndex("TagsTagId");
 
@@ -209,11 +384,62 @@ namespace Benkyou.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.HasOne("Benkyou.DAL.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.HasOne("Benkyou.DAL.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Benkyou.DAL.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.HasOne("Benkyou.DAL.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("RecordTag", b =>
                 {
                     b.HasOne("Benkyou.DAL.Entities.Record", null)
                         .WithMany()
-                        .HasForeignKey("RecordsRecordId")
+                        .HasForeignKey("RecordsId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 

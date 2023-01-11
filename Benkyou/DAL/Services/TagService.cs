@@ -12,7 +12,7 @@ public class TagService
         _context = context;
     }
 
-    public async Task<Tag> TagRecordsAsync(int userId, string name, IReadOnlyCollection<Record> records)
+    public async Task<Tag> TagRecordsAsync(Guid userId, string name, IReadOnlyCollection<Record> records)
     {
         var tag = _context.Tags.Include(t => t.Records).FirstOrDefault(t => t.UserId == userId && t.Name == name);
         if (tag != null)
@@ -50,7 +50,7 @@ public class TagService
         return tag;
     }
 
-    public async Task<List<Tag>> GetTagsAsync(int userId)
+    public async Task<List<Tag>> GetTagsAsync(Guid userId)
     {
         return await _context.Tags.Where(t => t.UserId == userId).ToListAsync();
     }

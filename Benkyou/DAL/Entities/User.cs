@@ -1,11 +1,10 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Identity;
 
 namespace Benkyou.DAL.Entities;
 
-public class User
+public class User: IdentityUser<Guid>
 {
-    public int UserId { get; set; }
-    public string Username { get; set; }
     public long TelegramId { get; set; }
     public RecordType DefaultRecordType { get; set; } = RecordType.Any;
     public virtual ICollection<Record> Records { get; set; }
