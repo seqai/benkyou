@@ -8,12 +8,15 @@ using BenkyouWebApp.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
-builder.Services.Configure<EmailServiceConfiguration>(builder.Configuration.GetSection(EmailServiceConfiguration.SectionName));
 
-// Add services to the container.
+// Configuration
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
+// Framework related services
+builder.Services.Configure<EmailServiceConfiguration>(builder.Configuration.GetSection(EmailServiceConfiguration.SectionName));
 builder.Services.RegisterBenkyoDAL(builder.Configuration.GetConnectionString("BenkyouDb"));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -21,9 +24,11 @@ builder.Services.AddDefaultIdentity<User>(options => options.SignIn.RequireConfi
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-builder.Services.AddSingleton<WeatherForecastService>();
+builder.Services.AddMudServices();
 
+// Application related services
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

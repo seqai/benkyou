@@ -1,0 +1,213 @@
+﻿@page "/records"
+
+<PageTitle>Records</PageTitle>
+
+@using Benkyou.DAL.Services
+@using Benkyou.DAL.Entities
+@using System.Security.Claims
+@using MudBlazor
+@using MudBlazor.Extensions
+@using System.Net.NetworkInformation
+@using System.ComponentModel
+@using Benkyou.DAL.Filters
+@using BenkyouWebApp.Pages.Dialogs
+@inject IDialogService DialogService
+@inject RecordService RecordService
+@inject TagService TagService
+
+<h1>Records</h1>
+@if(!_loading)
+{
+    <MudGrid>
+        <MudItem xs="12" sm="3">
+            <MudTextField Label="Search" Variant="Variant.Outlined" Color="Color.Info" T="string" @bind-Value="_searchTerm" />
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudSelect T="RecordType?" 
+                       MultiSelection="true" 
+                       SelectAll="true" 
+                       SelectAllText="Select all" 
+                       @bind-SelectedValues="_recordTypes"
+                       MultiSelectionTextFunc="@(new Func<List<string>, string>(CreateRecordTypeFilterText))"
+                       Label="Record Types" 
+                       AdornmentIcon="@Icons.Material.Filled.Search">
+                @foreach (var recordType in AllRecordTypes)
+                {
+                    <MudSelectItem T="RecordType?" Value="@recordType">@recordType.ToDescriptionString()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudChipSet AllClosable="true" OnClose="RemoveTagFilter">
+                @foreach (var tag in _tags)
+                {
+                    <MudChip Text="@tag"></MudChip>
+                }
+            </MudChipSet>
+            <MudAutocomplete @ref="_tagAutocompleteRef"
+                             T="string"
+                             Label="Tags"
+                             SearchFunc="@SearchTags"
+                             ValueChanged="AddTagFilter"
+                             CoerceText="true"
+                             CoerceValue="false"/>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+
+        </MudItem>
+    </MudGrid>
+    <MudPaper>
+        <MudTable @ref="_tableRef" ServerData="@(new Func<TableState, Task<TableData<Record>>>(FetchRecords))" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info" RowsPerPage="25">
+            <ToolBarContent>
+                @* <MudButton Color="Color.Info" Variant="Variant.Outlined" OnClick="() => _tableRef.ReloadServerData()" Icon="@Icons.Material.Filled.Search" /> *@
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Content.ToString())" T="Record">Content</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Type.ToString())" T="Record">Type</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Created.ToString())" T="Record">Created</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Updated.ToString())" T="Record">Updated</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Hits.ToString())" T="Record">Hits</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Tags.ToString())" T="Record">Tags</MudTableSortLabel></MudTh>
+                <MudTh>Delete</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Content">@context.Content.Trim()</MudTd>
+                <MudTd DataLabel="Type">@context.RecordType</MudTd>
+                <MudTd DataLabel="Created">@context.CreatedAt.ToString("D")</MudTd>
+                <MudTd DataLabel="Updated">@context.UpdatedAt.ToString("D")</MudTd>
+                <MudTd DataLabel="Hits">@context.Hits.Count</MudTd>
+                <MudTd DataLabel="Tags">@string.Join(", ", context.Tags.Select(x => x.Name.Trim()))</MudTd>
+                <MudTd DataLabel="Delete"><MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="@(_ => DeleteRecord(context))"></MudIconButton></MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No matching records found</MudText>
+            </NoRecordsContent>
+            <LoadingContent>
+                <MudText>Loading...</MudText>
+            </LoadingContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+
+    </MudPaper>
+}
+@code
+{
+    private static readonly IReadOnlyList<RecordType> AllRecordTypes = Enum.GetValues(typeof(RecordType)).Cast<RecordType>().Where(x => x != RecordType.Any).ToList().AsReadOnly();
+    private IReadOnlyList<string> _allTags = Array.Empty<string>();
+
+    private bool _loading = true;
+    private Guid _userId = default;
+
+    private MudTable<Record>? _tableRef;
+    private MudAutocomplete<string>? _tagAutocompleteRef;
+
+    [CascadingParameter] 
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    // Filter related fields
+    private RecordFilter _recordFilter = new();
+
+    private string _searchTerm
+    {
+        get => _recordFilter.Content;
+        set
+        {
+            _recordFilter.Content = value;
+            _tableRef?.ReloadServerData();
+        }
+    }
+
+    private IEnumerable<RecordType?> _recordTypes
+    {
+        get => _recordFilter.RecordTypes.Cast<RecordType?>();
+        set
+        {
+            _recordFilter.RecordTypes = value.Cast<RecordType>().ToList();
+            _tableRef?.ReloadServerData();
+        }
+    }
+
+    private IEnumerable<string> _tags
+    {
+        get => _recordFilter.Tags;
+        set
+        {
+            _recordFilter.Tags = value.ToList();
+            _tableRef?.ReloadServerData();
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var state = await authenticationStateTask;
+        var user = state.User;
+        if (user.Identity is { IsAuthenticated: true })
+        {
+            _userId = Guid.Parse(user.FindFirstValue(ClaimTypes.NameIdentifier));
+            _allTags = (await TagService.GetTagsAsync(_userId)).Select(x => x.Name).ToList();
+            _loading = false;
+        }
+        else
+        {
+
+        }
+    }
+
+    private async Task<TableData<Record>> FetchRecords(TableState tableState)
+    {
+        var skip = tableState.Page * tableState.PageSize;
+        var take = tableState.PageSize;
+        var sortField = tableState.SortLabel is null ? RecordSortField.Default : Enum.Parse<RecordSortField>(tableState.SortLabel);
+        var sortDirection = tableState.SortDirection;
+
+        _recordFilter.SortField = sortField;
+        _recordFilter.SortDescending = sortDirection == SortDirection.Descending;
+
+        var records = await RecordService.GetRecords(_userId, _recordFilter, false, skip, take);
+
+        return new TableData<Record>() { TotalItems = records.TotalCount, Items = records };
+    }
+
+    private void RemoveTagFilter(MudChip tag)
+    {
+        _tags = _tags.Where(x => x != tag.Text);
+    }
+
+    private Task<IEnumerable<string>> SearchTags(string? input) => Task.FromResult(_allTags.Where(x => !_tags.Contains(x) && (input is null || x.Contains(input, StringComparison.OrdinalIgnoreCase))));
+
+    private void AddTagFilter(string tag)
+    { 
+        _tags = _tags.Append(tag).ToList();
+        _tagAutocompleteRef?.Clear();
+    }
+
+    private async void DeleteRecord(Record context)
+    {
+        if (context.UserId != _userId)
+        {
+            throw new InvalidOperationException("Cannot delete record that does not belong to current user");
+        }
+        
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+        var parameters = new DialogParameters { { "ContentText", $"Delete {context.Content}?" } };
+        var dialog = await DialogService.ShowAsync<SimpleDialog>($"Delete {context.Content}?", parameters, options);
+        var result = await dialog.Result;
+        if (result.Canceled)
+        {
+            return;
+        }
+        
+        await RecordService.RemoveRecord(context);
+        _tableRef?.ReloadServerData();
+    }
+
+    private static string CreateRecordTypeFilterText(List<string> recordTypes) => (recordTypes.Count == AllRecordTypes.Count || recordTypes.Count == 0) 
+        ? "All" 
+        : string.Join(", ", recordTypes);
+
+
+}
+

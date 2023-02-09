@@ -1,5 +1,6 @@
 ﻿using Benkyou.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Benkyou.DAL.Services;
 

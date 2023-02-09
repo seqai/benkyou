@@ -1,4 +1,5 @@
 using Benkyou.DAL.Entities;
+using Benkyou.DAL.Filters;
 using Benkyou.DAL.Services;
 using BenkyouBot.Controllers;
 using Telegram.BotAPI;
@@ -28,7 +29,14 @@ public class ExportService
 
     public async Task HandleExport(User user, RecordType recordType, DateOnly from, DateOnly till, bool showIgnored, CancellationToken cancellationToken)
     {
-        var records = await _recordService.GetRecords(user.Id, recordType, from, till, showIgnored);
+        var filter = new RecordFilter
+        {
+            RecordTypes = new [] { recordType },
+            FromDate = from.ToDateTime(TimeOnly.MinValue),
+            ToDate = till.ToDateTime(TimeOnly.MinValue),
+        };
+        
+        var records = await _recordService.GetRecords(user.Id, filter, showIgnored);
         var csvStream = new MemoryStream();
         await using var writer = new StreamWriter(csvStream);
         foreach (var record in records)
