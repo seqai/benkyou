@@ -7,6 +7,6 @@ public enum RecordSortField
     Type,
     Created,
     Updated,
-    Hits,
+    Score,
     Tags
 }

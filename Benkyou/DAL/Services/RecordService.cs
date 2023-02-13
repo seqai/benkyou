@@ -33,12 +33,55 @@ public class RecordService
 
     public async Task<QueryPage<Record>> GetRecords(Guid userId, RecordFilter filter, bool showIgnored, int skip = 0, int take = 0)
     {
+
+        var fromDate = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Utc);
+        var toDate = fromDate.AddDays(1).AddTicks(-1);
+
+        switch (filter.DateFilterType)
+        {
+            case DateFilterType.Absolute:
+                fromDate = DateTime.SpecifyKind(filter.FromDate, DateTimeKind.Utc).Date;
+                toDate = DateTime.SpecifyKind(filter.ToDate, DateTimeKind.Utc).Date.AddDays(1).AddTicks(-1);
+                break;
+            case DateFilterType.RelativeDay:
+                fromDate = fromDate.AddDays(-filter.FromRelative);
+                toDate = toDate.AddDays(-filter.ToRelative);
+                break;
+            case DateFilterType.RelativeFullWeek:
+                fromDate = fromDate.StartOfWeek(DayOfWeek.Monday).AddDays(-filter.FromRelative * 7);
+                toDate = toDate.StartOfWeek(DayOfWeek.Monday).AddDays(-filter.ToRelative * 7 + 6);
+                break;
+            case DateFilterType.RelativeRollingWeek:
+                fromDate = fromDate.AddDays(-filter.FromRelative * 7);
+                toDate = toDate.AddDays(-filter.ToRelative * 7);
+                break;
+            case DateFilterType.RelativeFullMonth:
+                fromDate = fromDate.AddDays(-fromDate.Day + 1).AddMonths(-filter.ToRelative);
+                toDate = toDate.AddMonths(-filter.ToRelative + 1);
+                toDate = toDate.AddDays(-toDate.Day);
+                break;
+            case DateFilterType.RelativeRollingMonth:
+                fromDate = fromDate.AddMonths(-filter.FromRelative);
+                toDate = toDate.AddMonths(-filter.ToRelative);
+                break;
+            case DateFilterType.RelativeFullYear:
+                fromDate = fromDate.AddDays(-fromDate.DayOfYear + 1).AddYears(-filter.FromRelative);
+                toDate = toDate.AddDays(-toDate.DayOfYear).AddYears(-filter.ToRelative + 1);
+                break;
+            case DateFilterType.RelativeRollingYear:
+                fromDate = fromDate.AddYears(-filter.FromRelative);
+                toDate = toDate.AddYears(-filter.ToRelative);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
         var query = _dbContext.Records
             .Include(r => r.Tags)
             .Include(r => r.Hits)
             .Where(r => r.UserId == userId &&
-                        r.UpdatedAt >= filter.FromDate.ToUniversalTime() &&
-                        r.UpdatedAt <= filter.ToDate.ToUniversalTime());
+                        r.UpdatedAt >= fromDate &&
+                        r.UpdatedAt <= toDate);
 
         if (filter.RecordTypes.Count > 0 && !filter.RecordTypes.Contains(RecordType.Any))
         {
@@ -59,7 +102,7 @@ public class RecordService
         {
             query = query.Where(r => !r.Ignored);
         }
-        
+
         var count = await query.CountAsync();
 
         query = filter.SortField switch
@@ -68,7 +111,7 @@ public class RecordService
             RecordSortField.Type => query.OrderBy(r => r.RecordType, descending: filter.SortDescending),
             RecordSortField.Created => query.OrderBy(r => r.CreatedAt, descending: filter.SortDescending),
             RecordSortField.Updated => query.OrderBy(r => r.UpdatedAt, descending: filter.SortDescending),
-            RecordSortField.Hits => query.OrderBy(r => r.Hits.Count, descending: filter.SortDescending),
+            RecordSortField.Score => query.OrderBy(r => r.Score, descending: filter.SortDescending),
             RecordSortField.Tags => query.OrderBy(r => r.Tags, descending: filter.SortDescending),
             RecordSortField.Default => query,
             _ => throw new ArgumentOutOfRangeException()

@@ -11,6 +11,7 @@
 @using System.ComponentModel
 @using Benkyou.DAL.Filters
 @using BenkyouWebApp.Pages.Dialogs
+@using System.Collections.ObjectModel
 @inject IDialogService DialogService
 @inject RecordService RecordService
 @inject TagService TagService
@@ -18,45 +19,105 @@
 <h1>Records</h1>
 @if(!_loading)
 {
-    <MudGrid>
-        <MudItem xs="12" sm="3">
-            <MudTextField Label="Search" Variant="Variant.Outlined" Color="Color.Info" T="string" @bind-Value="_searchTerm" />
-        </MudItem>
-        <MudItem xs="12" sm="3">
-            <MudSelect T="RecordType?" 
-                       MultiSelection="true" 
-                       SelectAll="true" 
-                       SelectAllText="Select all" 
-                       @bind-SelectedValues="_recordTypes"
-                       MultiSelectionTextFunc="@(new Func<List<string>, string>(CreateRecordTypeFilterText))"
-                       Label="Record Types" 
-                       AdornmentIcon="@Icons.Material.Filled.Search">
-                @foreach (var recordType in AllRecordTypes)
-                {
-                    <MudSelectItem T="RecordType?" Value="@recordType">@recordType.ToDescriptionString()</MudSelectItem>
-                }
-            </MudSelect>
-        </MudItem>
-        <MudItem xs="12" sm="3">
-            <MudChipSet AllClosable="true" OnClose="RemoveTagFilter">
-                @foreach (var tag in _tags)
-                {
-                    <MudChip Text="@tag"></MudChip>
-                }
-            </MudChipSet>
-            <MudAutocomplete @ref="_tagAutocompleteRef"
-                             T="string"
-                             Label="Tags"
-                             SearchFunc="@SearchTags"
-                             ValueChanged="AddTagFilter"
-                             CoerceText="true"
-                             CoerceValue="false"/>
-        </MudItem>
-        <MudItem xs="12" sm="3">
+    <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+        <MudGrid>
+            <MudItem xs="12" sm="2">
+                <MudTextField Label="Search" Variant="Variant.Outlined" Color="Color.Info" T="string" @bind-Value="_searchTerm" />
+            </MudItem>
+            <MudItem xs="12" sm="2">
+                <MudSelect T="RecordType?" 
+                           MultiSelection="true" 
+                           SelectAll="true" 
+                           SelectAllText="Select all" 
+                           @bind-SelectedValues="_recordTypes"
+                           MultiSelectionTextFunc="@(new Func<List<string>, string>(CreateRecordTypeFilterText))"
+                           Label="Record Types" 
+                           AdornmentIcon="@Icons.Material.Filled.Search">
+                    @foreach (var recordType in AllRecordTypes)
+                    {
+                        <MudSelectItem T="RecordType?" Value="@recordType">@recordType.ToDescriptionString()</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudChipSet AllClosable="true" OnClose="RemoveTagFilter" Class="align-self-start">
+                    @foreach (var tag in _tags)
+                    {
+                        <MudChip Text="@tag"></MudChip>
+                    }
+                </MudChipSet>
+                <MudAutocomplete @ref="_tagAutocompleteRef"
+                                 T="string"
+                                 Label="Tags"
+                                 SearchFunc="@SearchTags"
+                                 ValueChanged="AddTagFilter"
+                                 CoerceText="true"
+                                 CoerceValue="false"
+                                 Class="align-self-end"
+                />
+            </MudItem>
+            <MudItem xs="10" sm="4">
+                <MudGrid>
+                    @if (_dateFilterType != DateFilterType.Absolute)
+                    {
+                        <MudItem xs="4">
+                            <MudSelect T="string" Label="Fast Preset" @bind-Value="_quickPreset">
+                                @foreach (var datePreset in QuickDatePresets.Keys)
+                                {
+                                    <MudSelectItem T="string" Value="@datePreset"/>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudSelect T="int"
+                                       @bind-Value="_relativeDateFrom">
+                                @foreach (var relativeValue in RelativeValuesList)
+                                {
+                                    <MudSelectItem T="int" Value="@relativeValue">@(GetRelativeValueLabel(relativeValue, _dateFilterType))</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="2">
+                            <MudSelect T="int"
+                                       @bind-Value="_relativeDateTo">
+                                @foreach (var relativeValue in RelativeValuesList)
+                                {
+                                    <MudSelectItem T="int" Value="@relativeValue">@(GetRelativeValueLabel(relativeValue, _dateFilterType))</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    }
+                    else
+                    {
+                        <MudItem xs="8">
+                            <MudDateRangePicker @ref="_dateRangePicker" Label="With action buttons" @bind-DateRange="_dateRange" AutoClose="true">
+                                <PickerActions>
+                                    <MudButton OnClick="@(() => _dateRangePicker.Close(false))">Cancel</MudButton>
+                                    <MudButton Color="Color.Primary" OnClick="@(() => _dateRangePicker.Close())">Ok</MudButton>
+                                </PickerActions>
+                            </MudDateRangePicker>
+                        </MudItem>
+                    }
+                    <MudItem xs="4">
+                        <MudSelect T="DateFilterType"
+                                   @bind-Value="_dateFilterType">
+                            @foreach (var dateFilterType in AllDateFilterTypes)
+                            {
+                                <MudSelectItem T="DateFilterType" Value="@dateFilterType">@dateFilterType.ToDescriptionString()</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudGrid>
+            </MudItem>
+            <MudItem xs="2" sm="1">
+                <MudIconButton Class="align-self-end"
+                               Icon="@Icons.Material.Filled.RemoveRedEye"
+                               Color="_showHiddenRecords ? Color.Primary : Color.Dark" OnClick="() => _showHiddenRecords = !_showHiddenRecords" />
 
-        </MudItem>
-    </MudGrid>
-    <MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+    <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
         <MudTable @ref="_tableRef" ServerData="@(new Func<TableState, Task<TableData<Record>>>(FetchRecords))" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info" RowsPerPage="25">
             <ToolBarContent>
                 @* <MudButton Color="Color.Info" Variant="Variant.Outlined" OnClick="() => _tableRef.ReloadServerData()" Icon="@Icons.Material.Filled.Search" /> *@
@@ -66,7 +127,7 @@
                 <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Type.ToString())" T="Record">Type</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Created.ToString())" T="Record">Created</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Updated.ToString())" T="Record">Updated</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Hits.ToString())" T="Record">Hits</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Score.ToString())" T="Record">Hits</MudTableSortLabel></MudTh>
                 <MudTh><MudTableSortLabel SortLabel="@(RecordSortField.Tags.ToString())" T="Record">Tags</MudTableSortLabel></MudTh>
                 <MudTh>Delete</MudTh>
             </HeaderContent>
@@ -75,7 +136,7 @@
                 <MudTd DataLabel="Type">@context.RecordType</MudTd>
                 <MudTd DataLabel="Created">@context.CreatedAt.ToString("D")</MudTd>
                 <MudTd DataLabel="Updated">@context.UpdatedAt.ToString("D")</MudTd>
-                <MudTd DataLabel="Hits">@context.Hits.Count</MudTd>
+                <MudTd DataLabel="Score">@context.Score</MudTd>
                 <MudTd DataLabel="Tags">@string.Join(", ", context.Tags.Select(x => x.Name.Trim()))</MudTd>
                 <MudTd DataLabel="Delete"><MudIconButton Icon="@Icons.Material.Filled.Delete" aria-label="delete" OnClick="@(_ => DeleteRecord(context))"></MudIconButton></MudTd>
             </RowTemplate>
@@ -90,25 +151,138 @@
             </PagerContent>
         </MudTable>
 
-    </MudPaper>
+    </MudContainer>
 }
+
 @code
 {
     private static readonly IReadOnlyList<RecordType> AllRecordTypes = Enum.GetValues(typeof(RecordType)).Cast<RecordType>().Where(x => x != RecordType.Any).ToList().AsReadOnly();
+    private static readonly IReadOnlyList<DateFilterType> AllDateFilterTypes = Enum.GetValues(typeof(DateFilterType)).Cast<DateFilterType>().ToList().AsReadOnly();
+    private static readonly IReadOnlyList<int> RelativeValuesList = Enumerable.Range(0, 100).ToList().AsReadOnly();
+
+    private static readonly IReadOnlyDictionary<string, Action<RecordFilter>> QuickDatePresets = new ReadOnlyDictionary<string, Action<RecordFilter>>(new Dictionary<string, Action<RecordFilter>>
+    {
+        {
+            "Today",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeDay;
+                x.FromRelative = 0;
+                x.ToRelative = 0;
+            }
+        },
+        {
+            "Yesterday",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeDay;
+                x.FromRelative = 1;
+                x.ToRelative = 1;
+            }
+        },
+        {
+            "This Week",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullWeek;
+                x.FromRelative = 0;
+                x.ToRelative = 0;
+            }
+        },
+        {
+            "Last Week",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullWeek;
+                x.FromRelative = 1;
+                x.ToRelative = 1;
+            }
+        },
+        {
+            "Last 2 Weeks",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullWeek;
+                x.FromRelative = 1;
+                x.ToRelative = 0;
+            }
+        },
+        {
+            "This Month",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullMonth;
+                x.FromRelative = 0;
+                x.ToRelative = 0;
+            }
+        },
+        {
+            "Last Month",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullMonth;
+                x.FromRelative = 1;
+                x.ToRelative = 1;
+            }
+        },
+        {
+            "This Year",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullYear;
+                x.FromRelative = 0;
+                x.ToRelative = 0;
+            }
+        },
+        {
+            "Last Year",
+            x =>
+            {
+                x.DateFilterType = DateFilterType.RelativeFullYear;
+                x.FromRelative = 1;
+                x.ToRelative = 1;
+            }
+        },
+    });
+
     private IReadOnlyList<string> _allTags = Array.Empty<string>();
 
     private bool _loading = true;
     private Guid _userId = default;
 
     private MudTable<Record>? _tableRef;
+    private MudDateRangePicker? _dateRangePicker;
     private MudAutocomplete<string>? _tagAutocompleteRef;
 
     [CascadingParameter] 
-    private Task<AuthenticationState> authenticationStateTask { get; set; }
+    private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
     // Filter related fields
     private RecordFilter _recordFilter = new();
 
+    private string? _quickPreset
+    {
+        get => null;
+        set
+        {
+            if (value != null && QuickDatePresets.TryGetValue(value, out var action))
+            {
+                action(_recordFilter);
+                _tableRef?.ReloadServerData();
+            }
+        }
+    }
+
+    private bool _showHidden = false;
+    private bool _showHiddenRecords
+    {
+        get => _showHidden;
+        set
+        {
+            _showHidden = value;
+            _tableRef?.ReloadServerData();
+        }
+    }
     private string _searchTerm
     {
         get => _recordFilter.Content;
@@ -139,10 +313,51 @@
         }
     }
 
+    private DateFilterType _dateFilterType
+    {
+        get => _recordFilter.DateFilterType;
+        set
+        {
+            _recordFilter.DateFilterType = value;
+            _tableRef?.ReloadServerData();
+        }
+    }
+
+    private DateRange _dateRange
+    {
+        get => new DateRange(_recordFilter.FromDate, _recordFilter.ToDate);
+        set
+        {
+            _recordFilter.FromDate = value.Start ?? DateTime.Now;
+            _recordFilter.ToDate = value.End ?? DateTime.Now;
+            _tableRef?.ReloadServerData();
+        }
+    }
+
+    private int _relativeDateFrom
+    {
+        get => _recordFilter.FromRelative;
+        set
+        {
+            _recordFilter.FromRelative = value;
+            _tableRef?.ReloadServerData();
+        }
+    }
+
+    private int _relativeDateTo
+    {
+        get => _recordFilter.ToRelative;
+        set
+        {
+            _recordFilter.ToRelative = value;
+            _tableRef?.ReloadServerData();
+        }
+    }
+
 
     protected override async Task OnInitializedAsync()
     {
-        var state = await authenticationStateTask;
+        var state = await AuthenticationStateTask;
         var user = state.User;
         if (user.Identity is { IsAuthenticated: true })
         {
@@ -166,7 +381,7 @@
         _recordFilter.SortField = sortField;
         _recordFilter.SortDescending = sortDirection == SortDirection.Descending;
 
-        var records = await RecordService.GetRecords(_userId, _recordFilter, false, skip, take);
+        var records = await RecordService.GetRecords(_userId, _recordFilter, _showHiddenRecords, skip, take);
 
         return new TableData<Record>() { TotalItems = records.TotalCount, Items = records };
     }
@@ -190,7 +405,7 @@
         {
             throw new InvalidOperationException("Cannot delete record that does not belong to current user");
         }
-        
+
         var options = new DialogOptions { CloseOnEscapeKey = true };
         var parameters = new DialogParameters { { "ContentText", $"Delete {context.Content}?" } };
         var dialog = await DialogService.ShowAsync<SimpleDialog>($"Delete {context.Content}?", parameters, options);
@@ -199,7 +414,7 @@
         {
             return;
         }
-        
+
         await RecordService.RemoveRecord(context);
         _tableRef?.ReloadServerData();
     }
@@ -208,6 +423,50 @@
         ? "All" 
         : string.Join(", ", recordTypes);
 
+    private static string GetRelativeValueLabel(int relativeValue, DateFilterType dateFilterType)
+    {
+        if (relativeValue == 0)
+        {
+            return dateFilterType switch
+            {
+                DateFilterType.RelativeDay => "Today",
+                DateFilterType.RelativeFullWeek =>  "This Week",
+                DateFilterType.RelativeFullMonth => "This Month",
+                DateFilterType.RelativeFullYear => "This Year",
+                DateFilterType.RelativeRollingWeek => "Today",
+                DateFilterType.RelativeRollingMonth => "Today",
+                DateFilterType.RelativeRollingYear => "Today",
+                _ => throw new ArgumentOutOfRangeException(nameof(dateFilterType), dateFilterType, null)
+            };
+        }
 
+        if (relativeValue == 1)
+        {
+            return dateFilterType switch
+            {
+                DateFilterType.RelativeDay => "Yesterday",
+                DateFilterType.RelativeFullWeek =>  "Last Week",
+                DateFilterType.RelativeFullMonth => "Last Month",
+                DateFilterType.RelativeFullYear => "Last Year",
+                DateFilterType.RelativeRollingWeek => $"-{relativeValue}RW",
+                DateFilterType.RelativeRollingMonth => $"-{relativeValue}RM",
+                DateFilterType.RelativeRollingYear => $"-{relativeValue}RY",
+                _ => throw new ArgumentOutOfRangeException(nameof(dateFilterType), dateFilterType, null)
+            };
+
+        }
+
+        return dateFilterType switch
+        {
+            DateFilterType.RelativeDay => $"-{relativeValue}D",
+            DateFilterType.RelativeFullWeek => $"-{relativeValue}FW",
+            DateFilterType.RelativeFullMonth => $"-{relativeValue}FM",
+            DateFilterType.RelativeFullYear => $"-{relativeValue}FY",
+            DateFilterType.RelativeRollingWeek => $"-{relativeValue}RW",
+            DateFilterType.RelativeRollingMonth => $"-{relativeValue}RM",
+            DateFilterType.RelativeRollingYear => $"-{relativeValue}RY",
+            _ => throw new ArgumentOutOfRangeException(nameof(dateFilterType), dateFilterType, null)
+        };
+    }
 }
 
